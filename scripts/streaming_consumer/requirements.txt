@@ -10,7 +10,10 @@ certifi==2023.7.22
 cffi==1.15.1
 charset-normalizer==3.2.0
 cryptography==41.0.2
+fastparquet
 frozenlist==1.4.0
+google-cloud-storage
+gcsfs  # https://github.com/fsspec/gcsfs
 idna==3.4
 isodate==0.6.1
 msal==1.23.0

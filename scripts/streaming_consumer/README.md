@@ -1,4 +1,4 @@
-# start
+# Start
 
 - Create .env file with these variables:
 ```
@@ -14,6 +14,10 @@ EVENTHUB_NAME=dummy-data
     - `python second_rcv.py`
 
 
+## Fastparquet
+
+How to append from file using `append=True`
+https://fastparquet.readthedocs.io/en/latest/api.html#fastparquet.write
 
 ## Error log
 
