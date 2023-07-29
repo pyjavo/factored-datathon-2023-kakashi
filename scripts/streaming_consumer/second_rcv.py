@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import logging
 
 from azure.eventhub.aio import EventHubConsumerClient
 from dotenv import load_dotenv
@@ -16,7 +17,13 @@ EVENTHUB_NAME = os.getenv('EVENTHUB_NAME')
 
 async def on_event(partition_context, event):
     # Put your code here.
-    print("_____________Received event from partition: {}.".format(partition_context.partition_id))
+    # logging.info(
+    #     f"_____________Received event from partition: {partition_context.partition_id}."
+    # )
+    # logging.info(event)
+    print(f"_____________Received event from partition: {partition_context.partition_id}.")
+    # print(event)
+    # print()
     await partition_context.update_checkpoint(event)
 
 
