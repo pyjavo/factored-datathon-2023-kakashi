@@ -1,4 +1,4 @@
-# Start
+# Running locally
 
 - Create .env file with these variables:
 ```
@@ -9,8 +9,8 @@ EVENTHUB_NAME=dummy-data
 - Create virtual environment
 - Activate virtual environment
 - Install requirements with `pip install -r requirements.txt`
-- Run python script (there are 2 options for testing functionality)
-    - `python four_rcv.py`
+- Run python script (there are 2 options for testing the functionality)
+    - `python streaming_juan.py.py`
     - `python async_receiver.py`
 
 
