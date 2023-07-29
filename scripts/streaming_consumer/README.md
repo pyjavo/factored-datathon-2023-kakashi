@@ -11,7 +11,7 @@ EVENTHUB_NAME=dummy-data
 - Install requirements with `pip install -r requirements.txt`
 - Run python script (there are 2 options for testing functionality)
     - `python four_rcv.py`
-    - `python second_rcv.py`
+    - `python async_receiver.py`
 
 
 ## Fastparquet
@@ -33,7 +33,7 @@ INFO:azure.eventhub._pyamqp.aio._cbs_async:CBS Put token error: b'amqp:not-found
 ```
 
 
-- Projecy `second_rcv.py` gets an error. `client-error: CBS Token authentication failed`
+- Projecy `async_receiver.py` gets an error. `client-error: CBS Token authentication failed`
 
 ```
 EventProcessor instance 'ad4bbc15-cf93-41fe-93c7-57813e5118dc' of eventhub 'factored-datathon' 
