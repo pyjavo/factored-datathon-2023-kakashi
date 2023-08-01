@@ -4,8 +4,10 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from azure.eventhub import EventHubConsumerClient
+from azure.eventhub._common import EventData
+from azure.eventhub._eventprocessor.partition_context import PartitionContext
 # import google.cloud.logging
-# import gcsfs
+import gcsfs
 import pandas as pd
 
 
@@ -14,11 +16,12 @@ load_dotenv()
 connection_str = os.getenv('CONNECTION_STR')
 consumer_group = os.getenv('CONSUMER_GROUP')
 eventhub_name = os.getenv('EVENTHUB_NAME')
-team_data_lake = os.getenv('TEAM_DATALAKE')
 
-month = str(datetime.now().month)
-year = str(datetime.now().year)
-current_date = month + '_' + year
+# Get the current date and time
+current_date_time = datetime.now()
+
+# Format the current date as a string using the desired format
+current_date = current_date_time.strftime("%Y%m%d")
 
 client = EventHubConsumerClient.from_connection_string(
     connection_str,
@@ -26,27 +29,20 @@ client = EventHubConsumerClient.from_connection_string(
     eventhub_name=eventhub_name
 )
 
-column_names = [
-    'vote',
-    'style',
-    'offset',
-    'timestamp',
+body_fields = [
     'asin',
+    'image',
     'overall',
     'reviewText',
     'reviewerID',
     'reviewerName',
+    'style',
     'summary',
-    'verified',
-    'internal_partition',
-    'partition_number',
     'unixReviewTime',
-    'image'
+    'verified',
+    'vote',
+    'internal_partition'
 ]
-# Local path for testing
-file_path = 'reviews_' + f"{current_date}.parquet"
-# file_path = team_data_lake + f"{current_date}.parquet"
-
 
 # Configure logging
 
@@ -57,33 +53,43 @@ file_path = 'reviews_' + f"{current_date}.parquet"
 # logger = logging.getLogger("azure.eventhub")
 # logging.basicConfig(level=logging.INFO)
 
-def on_event(partition_context, event):
+def on_event(partition_context: PartitionContext, event: EventData):
     # logger.info(
     #     f"Received event from partition {partition_context.partition_id}"
     # )
     # logger.info(f"___Event\n {event}")
-    print(f"Received event from partition {partition_context.partition_id}")
-    print(f"___Event\n {event}")  # event is EventData
+    #print(f"Received event from partition {partition_context.partition_id}")
+    #print(f"___Event\n {event}")  # event is EventData
 
     jsonbody = event.body_as_json(encoding='UTF-8')  # jsonbody is a dict
     # print(f"======== Received jsonbody =======\n {jsonbody}")
-    print()
-    print()
+    #print()
+    #print()
 
-    for col in column_names:
-        if col not in jsonbody.keys():
-            jsonbody[col] = None
+    df_event = pd.DataFrame(index=[0])
 
-    df = pd.DataFrame(jsonbody, index=[0])
+    # Json body fields
+    for field in body_fields:
+      df_event[field] = jsonbody[field] if field in jsonbody else None
+    
+    # Metadata fields
+    df_event['offset'] = event.offset
+    df_event['sequence_number'] = event.sequence_number
+    df_event['enqueued_time'] = event.enqueued_time
+    
+    df_event = df_event.astype('string')
+    
+    # Cloud path
+    bucket_name = 'kakashi_data_lake'
+    gcs_folder_path = 'streaming/amazon_reviews_data/'
+    file_name = f"{current_date}_{event.offset}.parquet"
+    file_path = f"gs://{bucket_name}/{gcs_folder_path}{file_name}"
 
+    #print()
+    #print('creating file...')
     print()
-    print('creating file...')
-    print()
-    try:
-        df.to_parquet(file_path, engine='fastparquet', append=True)
-        # df.to_parquet(file_path, mode="append")
-    except FileNotFoundError:
-        df.to_parquet(file_path, engine='fastparquet')
+    df_event.to_parquet(file_path, engine='pyarrow', index=False)
+    print(f'file {file_name} created')
 
     partition_context.update_checkpoint(event)
 
@@ -94,5 +100,3 @@ with client:
         on_event=on_event,
         starting_position="-1",
     )
-    # receive events from specified partition:
-    # client.receive(on_event=on_event, partition_id='0')
